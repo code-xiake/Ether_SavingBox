@@ -8,7 +8,7 @@ contract SavingBox is ReentrancyGuard {
     uint256 withdrawalLimit;
     
     constructor() {
-        owner = msg.sender;
+        owner = 0xa1B94ef0f24d7F4fd02285EFcb9202E6C6EC655B;
         withdrawalLimit = 0;
     }
     
