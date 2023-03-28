@@ -6,5 +6,7 @@ transactions are made in big numbers ie *e18
 
 Deployment information
 live-site; https://ether-saving-box-ups6.vercel.app/
-contract address; 0x7fd4AEd4Fb3644eB78b412d859E675Bea910a820
+contract address; 0x158B62B791f669d9896C25Dd9E76011D0de99eab
 network;goerli
+
+the owner is set to the graders test account: 0xa1B94ef0f24d7F4fd02285EFcb9202E6C6EC655B
