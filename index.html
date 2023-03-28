@@ -53,13 +53,24 @@
 <br><br>
 
 
+<button onclick = "ShowContractAddress()">show contract address</button>
+<p id = "CtrAddress"></p><br>
+
+
+<button id="deposit-button">deposit</button>
+<input type="text" id="withdraw-amount" placeholder="Amount to deposit (ETH)">
+<p id = "deposit"></p> <br>
+
+
+
+
     
     <button onclick="provider.send('eth_requestAccounts', []).then(() => {
       provider.listAccounts().then((accounts) => {
         signer = provider.getSigner(accounts[0]);
         document.getElementById('wallet-address').innerHTML = accounts[0];
       });
-    });">owner address</button>
+    });">current signer</button>
     <div id="wallet-address"></div>
 
   </body>
@@ -77,26 +88,8 @@
 
 
     // Declaring contract blockchain details
-    var contractAddress = "0x7fd4AEd4Fb3644eB78b412d859E675Bea910a820";
+    var contractAddress = "0x158B62B791f669d9896C25Dd9E76011D0de99eab";
     var abi =[
-	{
-		"inputs": [],
-		"stateMutability": "nonpayable",
-		"type": "constructor"
-	},
-	{
-		"inputs": [],
-		"name": "getBalance",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
 	{
 		"inputs": [
 			{
@@ -109,6 +102,11 @@
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
+	},
+	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
 	},
 	{
 		"inputs": [
@@ -126,6 +124,19 @@
 	{
 		"stateMutability": "payable",
 		"type": "receive"
+	},
+	{
+		"inputs": [],
+		"name": "getBalance",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
 	}
 ]
     var EthereumSavingBox;
@@ -147,38 +158,78 @@ const contract = new ethers.Contract(contractAddress, abi, provider);
 
 async function getBalance() {
   const balance = await contract.getBalance();
+  const balanceInEther = balance / 1e18;
   const balanceElement = document.getElementById("balance");
-  balanceElement.innerHTML = `Contract Balance: ${balance.toString()}`;
+  balanceElement.innerHTML = `Contract Balance: ${balanceInEther.toString()} ETH`;
 }
 
 
 
 
 async function setWithdrawalLimit() {
-  const limit = document.getElementById("limit").value;
+  const limitInEth = parseFloat(document.getElementById("limit").value);
+  const limitInWei = ethers.utils.parseEther(limitInEth.toString());
   const signer = provider.getSigner();
   const contractWithSigner = new ethers.Contract(contractAddress, abi, signer);
-  const tx = await contractWithSigner.setWithdrawalLimit(limit);
+  const tx = await contractWithSigner.setWithdrawalLimit(limitInWei);
   await tx.wait();
   const limitMessage = document.getElementById("limitMessage");
-  limitMessage.innerHTML = `Withdrawal Limit Set: ${limit}`;
+  limitMessage.innerHTML = `Withdrawal Limit Set: ${limitInEth} ETH`;
 }
+
 
 
 
 async function withdraw() {
-  const amount = document.getElementById("amount").value;
+  const amountInEth = parseFloat(document.getElementById("amount").value);
+  const amountInWei = ethers.utils.parseEther(amountInEth.toString());
   const signer = provider.getSigner();
   const contractWithSigner = new ethers.Contract(contractAddress, abi, signer);
   
   try {
-    const tx = await contractWithSigner.withdraw(amount);
+    const tx = await contractWithSigner.withdraw(amountInWei);
     await tx.wait();
-    document.getElementById("message").innerHTML = `Withdrawal Successful: ${amount} ETH`;
+    document.getElementById("message").innerHTML = `Withdrawal Successful: ${amountInEth} ETH`;
   } catch (error) {
     document.getElementById("message").innerHTML = "Insufficient balance to withdraw or withdrawal limit exceeded.";
   }
 }
+
+
+function ShowContractAddress() {
+  document.getElementById("CtrAddress").innerHTML="0x158B62B791f669d9896C25Dd9E76011D0de99eab"
+}
+
+
+
+
+
+
+
+
+// Define the withdraw function
+async function deposit() {
+  try {
+    const amountInEth = parseFloat(document.getElementById("withdraw-amount").value);
+    const amountInWei = ethers.utils.parseEther(amountInEth.toString());
+    const toAddress = '0x158B62B791f669d9896C25Dd9E76011D0de99eab'; // Hardcoded destination address
+    // Send the transaction to withdraw funds
+    const tx = await signer.sendTransaction({
+      to: toAddress,
+      value: amountInWei,
+    });
+    console.log(`Successfully withdrew ${amountInEth} ETH to address ${toAddress}`);
+    console.log(`Transaction hash: ${tx.hash}`);
+    document.getElementById("deposit").innerHTML = `deposit Successful: ${amountInEth} ETH`;
+  } catch (error) {
+    console.error(`Error withdrawing ETH: ${error}`);
+    document.getElementById("deposit").innerHTML = "Error: " + error.message;
+  }
+}
+
+// Add click event listener to the Withdraw button
+document.getElementById("deposit-button").addEventListener("click", deposit);
+
 
 
   </script>
